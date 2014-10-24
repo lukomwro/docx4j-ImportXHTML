@@ -78,25 +78,10 @@ import org.docx4j.org.xhtmlrenderer.render.BlockBox;
 import org.docx4j.org.xhtmlrenderer.render.Box;
 import org.docx4j.org.xhtmlrenderer.render.InlineBox;
 import org.docx4j.org.xhtmlrenderer.resource.XMLResource;
-import org.docx4j.wml.Body;
-import org.docx4j.wml.CTMarkupRange;
-import org.docx4j.wml.CTSimpleField;
-import org.docx4j.wml.ContentAccessor;
+import org.docx4j.wml.*;
 import org.docx4j.wml.DocDefaults.RPrDefault;
-import org.docx4j.wml.HpsMeasure;
-import org.docx4j.wml.P;
 import org.docx4j.wml.P.Hyperlink;
-import org.docx4j.wml.PPr;
 import org.docx4j.wml.PPrBase.PStyle;
-import org.docx4j.wml.R;
-import org.docx4j.wml.RFonts;
-import org.docx4j.wml.RPr;
-import org.docx4j.wml.RStyle;
-import org.docx4j.wml.Style;
-import org.docx4j.wml.Tbl;
-import org.docx4j.wml.Tc;
-import org.docx4j.wml.Text;
-import org.docx4j.wml.Tr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -1940,8 +1925,16 @@ public class XHTMLImporterImpl implements XHTMLImporter {
         	
             listHelper.peekListItemStateStack().isFirstChild=false;
         }
-        
-                
+
+        if (styleable instanceof BlockBox) {
+            float leftPosition = calculateLeftIndent((BlockBox) styleable);
+            if (0 != leftPosition) {
+                PPrBase.Ind leftIndent = new PPrBase.Ind();
+                leftIndent.setLeft(BigInteger.valueOf((int) leftPosition));
+                pPr.setInd(leftIndent);
+            }
+        }
+
 //        for (int i = 0; i < cStyle.getDerivedValues().length; i++) {
 //            CSSName name = CSSName.getByID(i);
 //            FSDerivedValue val = cStyle.getDerivedValues()[i];
@@ -1970,8 +1963,18 @@ public class XHTMLImporterImpl implements XHTMLImporter {
     	log.debug(XmlUtils.marshaltoString(pPr, true, true));
     	
     }
-    
-    
+
+    private float calculateLeftIndent(BlockBox box) {
+        float marginLeft = box.getMargin() != null ? box.getMargin().left() : 0;
+        Box parent = box.getParent();
+        while (null != parent) {
+            if (null != ((BlockBox) parent).getMargin()) {
+                marginLeft += ((BlockBox) parent).getMargin().left();
+            }
+            parent = parent.getParent();
+        }
+        return marginLeft;
+    }
 
     private void addRunProperties(RPr rPr, Map cssMap) {
     	
