@@ -147,6 +147,8 @@ public class XHTMLImporterImpl implements XHTMLImporter {
     protected WordprocessingMLPackage wordMLPackage;
     private RelationshipsPart rp;
     private NumberingDefinitionsPart ndp;
+
+    private boolean hyperlinksEnabled = true;
 	
 	public XHTMLImporterImpl(WordprocessingMLPackage wordMLPackage) {
 		
@@ -205,8 +207,15 @@ public class XHTMLImporterImpl implements XHTMLImporter {
 			String hyperlinkStyleID) {
 		hyperlinkStyleId = hyperlinkStyleID;
 	}
-	private String hyperlinkStyleId = null;	
-	
+	private String hyperlinkStyleId = null;
+
+
+    /**
+     * Configure to not generate hyperlinks
+     */
+    public void disableHyperlinks() {
+        this.hyperlinksEnabled = false;
+    }
 	
     /**
 	 * If you have your own implementation of the XHTMLImageHandler interface
@@ -1512,6 +1521,7 @@ public class XHTMLImporterImpl implements XHTMLImporter {
         // Short circuit for <a /> ie no child elements
     	if (s.getElement() !=null
     			&& s.getElement().getNodeName().equals("a")
+                && hyperlinksEnabled
     			&& inlineBox.isStartsHere()
     			//&& inlineBox.isEndsHere() 
     			&& !inlineBox.getElement().hasChildNodes()
@@ -1566,7 +1576,7 @@ public class XHTMLImporterImpl implements XHTMLImporter {
         	}
         	
             
-            if (s.getElement().getNodeName().equals("a")) {
+            if (s.getElement().getNodeName().equals("a") && hyperlinksEnabled) {
             	
             	if (inlineBox.isStartsHere()) {
                 	log.debug("Processing <a>... ");

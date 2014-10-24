@@ -52,9 +52,17 @@ public class HyperlinkTest {
 	}
 
 	private List<Object> convert(String xhtml) throws Docx4JException {
-        XHTMLImporterImpl XHTMLImporter = new XHTMLImporterImpl(wordMLPackage);		
+        XHTMLImporterImpl XHTMLImporter = new XHTMLImporterImpl(wordMLPackage);
 		return XHTMLImporter.convert(xhtml, "");
 	}
+
+    private List<Object> convert(String xhtml, boolean disableHyperlinks) throws Docx4JException {
+        XHTMLImporterImpl XHTMLImporter = new XHTMLImporterImpl(wordMLPackage);
+        if (disableHyperlinks) {
+            XHTMLImporter.disableHyperlinks();
+        }
+        return XHTMLImporter.convert(xhtml, "");
+    }
 
 	private List<Object> fromXHTML(String content) throws Docx4JException {
 		
@@ -271,6 +279,31 @@ public class HyperlinkTest {
 	        </w:r>
 	    </w:hyperlink> */		
 	}
+
+    @Test
+    public void testDisabledHyperlinks() throws Docx4JException {
+
+        String name = "anchor5";
+        String href= "http://www.google.com";
+
+        String followingSpanContent = "SPAN";
+        String followingPContent = "NEXTP";
+        List<Object> converted = convert("<div><p>"
+                + "<a name='" + name + "' href='" + href + "' >Some <span>rich</span> <b>content</b></a>"
+                + "<span>" + followingSpanContent + "</span></p>" +
+                "<p>" + followingPContent + "</p></div>", true);
+        System.out.println(XmlUtils.marshaltoString(converted.get(0), true, true));
+
+        // Address risk that hyperlink processing destroys following content
+        testFollowingSpan(((P)converted.get(0)).getContent(),  followingSpanContent);
+        testFollowingP((P)converted.get(1),  followingPContent);
+
+        List<Object> objects = converted;
+        P p = (P)objects.get(0);
+
+        // Test not hyperlink
+        assertFalse(p.getContent().get(1) instanceof P.Hyperlink);
+    }
 	
 	private void testBookmarkName(Object o, String name) {
 
